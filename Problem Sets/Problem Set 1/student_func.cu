@@ -49,21 +49,21 @@ void rgba_to_greyscale(const uchar4* const rgbaImage,
 
   //First create a mapping from the 2D block and grid locations
   //to an absolute 2D location in the image, then use that to
-    //calculate a 1D offset
-	// 2D Thread ID
-	int tx = threadIdx.x + blockIdx.x * blockDim.x;
-	int ty = threadIdx.y + blockIdx.y * blockDim.y;
-	if(ty < numCols && tx < numRows) {
-		int index = numRows * ty + tx;
+  //calculate a 1D offset
+  // 2D Thread ID
+  int tx = threadIdx.x + blockIdx.x * blockDim.x;
+  int ty = threadIdx.y + blockIdx.y * blockDim.y;
+  if(ty < numCols && tx < numRows) {
+	  int index = numRows * ty + tx;
 
-	// grey scale value
-	uchar4 pixel = rgbaImage[index];
+  // grey scale value
+  uchar4 pixel = rgbaImage[index];
 
-	unsigned char Gvalue = (unsigned char)(0.299f * pixel.x + 0.587f * pixel.y + 0.114f * pixel.z);
+  unsigned char Gvalue = (unsigned char)(0.299f * pixel.x + 0.587f * pixel.y + 0.114f * pixel.z);
 
-	// Write the grey scale value back to greyImage
-	greyImage[index] = Gvalue;
-	}
+  // Write the grey scale value back to greyImage
+  greyImage[index] = Gvalue;
+  }
 }
 
 void your_rgba_to_greyscale(const uchar4 * const h_rgbaImage, uchar4 * const d_rgbaImage,
