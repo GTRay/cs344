@@ -49,7 +49,7 @@ void rgba_to_greyscale(const uchar4* const rgbaImage,
 
   //First create a mapping from the 2D block and grid locations
   //to an absolute 2D location in the image, then use that to
-  //calculate a 1D offset
+    //calculate a 1D offset
 	// 2D Thread ID
 	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	int ty = threadIdx.y + blockIdx.y * blockDim.y;
