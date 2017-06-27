@@ -56,13 +56,13 @@ void rgba_to_greyscale(const uchar4* const rgbaImage,
   if(ty < numCols && tx < numRows) {
 	  int index = numRows * ty + tx;
 
-  // grey scale value
-  uchar4 pixel = rgbaImage[index];
+      // grey scale value
+      uchar4 pixel = rgbaImage[index];
 
-  unsigned char Gvalue = (unsigned char)(0.299f * pixel.x + 0.587f * pixel.y + 0.114f * pixel.z);
+      unsigned char Gvalue = (unsigned char)(0.299f * pixel.x + 0.587f * pixel.y + 0.114f * pixel.z);
 
-  // Write the grey scale value back to greyImage
-  greyImage[index] = Gvalue;
+      // Write the grey scale value back to greyImage
+      greyImage[index] = Gvalue;
   }
 }
 
@@ -74,11 +74,13 @@ void your_rgba_to_greyscale(const uchar4 * const h_rgbaImage, uchar4 * const d_r
   int blockWidth = 32;
   const dim3 blockSize(blockWidth, blockWidth, 1);  //TODO
 
-  int blocksX = numRows/blockWidth+1;
-  int blocksY = numRows/blockWidth+1;
+  int blocksX = numRows/blockWidth + 1;
+  int blocksY = numCols/blockWidth + 1;
   const dim3 gridSize( blocksX, blocksY, 1);  //TODO
+
   rgba_to_greyscale<<<gridSize, blockSize>>>(d_rgbaImage, d_greyImage, numRows, numCols);
 
-  cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
+  cudaDeviceSynchronize();
+  checkCudaErrors(cudaGetLastError());
 
 }
