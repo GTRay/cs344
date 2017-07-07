@@ -152,6 +152,21 @@ void separateChannels(const uchar4* const inputImageRGBA,
   // {
   //     return;
   // }
+  const int2 thread_2D_pos = make_int2( blockIdx.x * blockDim.x + threadIdx.x,
+                                        blockIdx.y * blockDim.y + threadIdx.y);
+  const int thread_1D_pos = thread_2D_pos.y * numCols + thread_2D_pos.x;
+
+  if(thread_2D_pos.x >= numCols || thread_2D_pos.y >= numRows)
+    return;
+
+  uchar4 inputPixel = inputImageRGBA[thread_1D_pos];
+  unsigned char red = inputPixel.x;
+  unsigned char green = inputPixel.y;
+  unsigned char blue = inputPixel.z;
+
+  redChannel[thread_1D_pos] = red;
+  greenChannel[thread_1D_pos] = green;
+  blueChannel[thread_1D_pos] = blue;
 }
 
 //This kernel takes in three color channels and recombines them
@@ -205,12 +220,13 @@ void allocateMemoryAndCopyToGPU(const size_t numRowsImage, const size_t numColsI
   //be sure to use checkCudaErrors like the above examples to
   //be able to tell if anything goes wrong
   //IMPORTANT: Notice that we pass a pointer to a pointer to cudaMalloc
+  checkCudaErrors(cudaMalloc(&d_filter, sizeof(unsigned char) * filterWidth * filterWidth));
 
   //TODO:
   //Copy the filter on the host (h_filter) to the memory you just allocated
   //on the GPU.  cudaMemcpy(dst, src, numBytes, cudaMemcpyHostToDevice);
   //Remember to use checkCudaErrors!
-
+  checkCudaErrors(cudaMemcpy(d_filter, h_filter, sizeof(unsigned char) * filterWidth * filterWidth, cudaMemcpyHostToDevice));
 }
 
 void your_gaussian_blur(const uchar4 * const h_inputImageRGBA, uchar4 * const d_inputImageRGBA,
