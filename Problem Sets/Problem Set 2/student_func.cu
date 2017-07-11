@@ -129,6 +129,13 @@ void gaussian_blur(const unsigned char* const inputChannel,
   // the value is out of bounds), you should explicitly clamp the neighbor values you read
   // to be within the bounds of the image. If this is not clear to you, then please refer
   // to sequential reference solution for the exact clamping semantics you should follow.
+  const int2 thread_2D_pos = make_int2( blockIdx.x * blockDim.x + threadIdx.x,
+                                        blockIdx.y * blockDim.y + threadIdx.y);
+
+  if(thread_2D_pos.x >= numCols || thread_2D_pos.y >= numRows)
+    return;
+
+  unsigned char pixelVal = (unsigned char) (inputChannel[0.2 * thread_2D_pos.y * numCols + thread_2D_pos.x]);
 }
 
 //This kernel takes in an image represented as a uchar4 and splits
@@ -237,20 +244,26 @@ void your_gaussian_blur(const uchar4 * const h_inputImageRGBA, uchar4 * const d_
                         const int filterWidth)
 {
   //TODO: Set reasonable block size (i.e., number of threads per block)
-  const dim3 blockSize;
+  int blockWidth = 32;
+  const dim3 blockSize(blockWidth, blockWidth, 1);
 
   //TODO:
   //Compute correct grid size (i.e., number of blocks per kernel launch)
   //from the image size and and block size.
-  const dim3 gridSize;
+  int blocksX = numRows/blockWidth + 1;
+  int blocksY = numCols/blockWidth + 1;
+  const dim3 gridSize(blocksX, blocksY, 1);
 
   //TODO: Launch a kernel for separating the RGBA image into different color channels
+  separateChannels<<<gridSize, blockSize>>>(d_inputImageRGBA, numRows, numCols, d_redBlurred, d_greenBlurred, d_blueBlurred);
+
 
   // Call cudaDeviceSynchronize(), then call checkCudaErrors() immediately after
   // launching your kernel to make sure that you didn't make any mistakes.
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 
   //TODO: Call your convolution kernel here 3 times, once for each color channel.
+
 
   // Again, call cudaDeviceSynchronize(), then call checkCudaErrors() immediately after
   // launching your kernel to make sure that you didn't make any mistakes.
