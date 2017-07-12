@@ -135,7 +135,33 @@ void gaussian_blur(const unsigned char* const inputChannel,
   if(thread_2D_pos.x >= numCols || thread_2D_pos.y >= numRows)
     return;
 
-  unsigned char pixelVal = (unsigned char) (inputChannel[0.2 * thread_2D_pos.y * numCols + thread_2D_pos.x]);
+  float pixelVal = (float) (filter[4] * inputChannel[thread_2D_pos.y * numCols + thread_2D_pos.x]);
+
+  if(thread_2D_pos.x - 1 >= 0 && thread_2D_pos.y - 1 >= 0)
+    pixelVal = pixelVal + (float) (filter[0] * inputChannel[(thread_2D_pos.y - 1) * numCols + (thread_2D_pos.x - 1)]);
+
+  if(thread_2D_pos.y - 1 >= 0)
+    pixelVal = pixelVal + (float) (filter[1] * inputChannel[(thread_2D_pos.y - 1) * numCols + thread_2D_pos.x]);
+
+  if(thread_2D_pos.x + 1 <= numCols && thread_2D_pos.y - 1 >= 0)
+    pixelVal = pixelVal + (float) (filter[2] * inputChannel[(thread_2D_pos.y - 1) * numCols + (thread_2D_pos.x + 1)]);
+
+  if(thread_2D_pos.x -1 >= 0)
+    pixelVal = pixelVal + (float) (filter[3] * inputChannel[thread_2D_pos.y * numCols + (thread_2D_pos.x - 1)]);
+
+  if(thread_2D_pos.x + 1 <= numCols)
+    pixelVal = pixelVal + (float) (filter[5] * inputChannel[thread_2D_pos.y * numCols + (thread_2D_pos.x + 1)]);
+
+  if(thread_2D_pos.x - 1 >= 0 && thread_2D_pos.y + 1 <= numRows)
+    pixelVal = pixelVal + (float) (filter[6] * inputChannel[(thread_2D_pos.y + 1) * numCols + (thread_2D_pos.x - 1)]);
+
+  if(thread_2D_pos.y + 1 <= numRows)
+    pixelVal = pixelVal + (float) (filter[7] * inputChannel[(thread_2D_pos.y + 1) * numCols + thread_2D_pos.x]);
+
+  if(thread_2D_pos.x + 1 <= numCols && thread_2D_pos.y + 1 <= numRows)
+    pixelVal = pixelVal + (float) (filter[8] * inputChannel[(thread_2D_pos.y + 1) * numCols + (thread_2D_pos.y + 1)]);
+
+  outputChannel[thread_2D_pos.y * numCols + thread_2D_pos.x] = (unsigned char) pixelVal;
 }
 
 //This kernel takes in an image represented as a uchar4 and splits
@@ -255,7 +281,7 @@ void your_gaussian_blur(const uchar4 * const h_inputImageRGBA, uchar4 * const d_
   const dim3 gridSize(blocksX, blocksY, 1);
 
   //TODO: Launch a kernel for separating the RGBA image into different color channels
-  separateChannels<<<gridSize, blockSize>>>(d_inputImageRGBA, numRows, numCols, d_redBlurred, d_greenBlurred, d_blueBlurred);
+  separateChannels<<<gridSize, blockSize>>>(d_inputImageRGBA, numRows, numCols, d_red, d_green, d_blue);
 
 
   // Call cudaDeviceSynchronize(), then call checkCudaErrors() immediately after
@@ -263,7 +289,9 @@ void your_gaussian_blur(const uchar4 * const h_inputImageRGBA, uchar4 * const d_
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 
   //TODO: Call your convolution kernel here 3 times, once for each color channel.
-
+  gaussian_blur<<<gridSize, blockSize>>>(d_red, d_redBlurred, numRows, numCols, d_filter, filterWidth);
+  gaussian_blur<<<gridSize, blockSize>>>(d_green, d_greenBlurred, numRows, numCols, d_filter, filterWidth);
+  gaussian_blur<<<gridSize, blockSize>>>(d_blue, d_blueBlurred, numRows, numCols, d_filter, filterWidth);
 
   // Again, call cudaDeviceSynchronize(), then call checkCudaErrors() immediately after
   // launching your kernel to make sure that you didn't make any mistakes.
